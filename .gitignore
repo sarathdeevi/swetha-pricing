@@ -1,0 +1,11 @@
+.classpath
+.project
+.gradle
+.idea
+build
+out
+temp
+encoded_gs_key*
+*.iml
+*.prefs
+/bin/
