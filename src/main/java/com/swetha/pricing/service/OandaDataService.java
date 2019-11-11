@@ -28,7 +28,7 @@ public class OandaDataService {
         this.seleniumWorker = seleniumWorker;
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void init() throws InterruptedException, IOException {
         System.out.println(fetchCurrencies().values());
     }
