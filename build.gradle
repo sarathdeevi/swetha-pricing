@@ -41,10 +41,3 @@ task stage(type: Copy, dependsOn: [clean, build]) {
     'app.jar'
   }
 }
-stage.mustRunAfter(clean)
-
-clean {
-  doLast {
-    project.file('app.jar').delete()
-  }
-}
