@@ -44,7 +44,7 @@ public class OandaDataService {
     }
 
     private Map<String, Values> fetchCurrencies() throws InterruptedException, IOException {
-        LOGGER.info("Loading chrome browser...");
+        LOGGER.info("Loading browser...");
         WebDriver webDriver = seleniumWorker.getDriver();
         webDriverThreadLocal.set(webDriver);
         webDriver.get("https://www1.oanda.com/fx-for-business/historical-rates");
