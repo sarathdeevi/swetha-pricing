@@ -1,1 +1,1 @@
-web: java -jar app.jar target/*.war
+web: java -jar build/libs/swetha-pricing-1.0.jar target/*.war
