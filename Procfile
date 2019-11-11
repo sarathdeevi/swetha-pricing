@@ -1,1 +1,1 @@
-web: java -jar build/libs/swetha-pricing-1.0.jar
+web: java -jar app.jar
