@@ -1,1 +1,1 @@
-web: java -Dserver.port=8080 -jar app.jar target/*.war
+web: java -Dserver.port=8080 -jar build/libs/swetha-pricing-1.0.jar target/*.war
