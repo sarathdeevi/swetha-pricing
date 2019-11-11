@@ -23,17 +23,25 @@ public class OandaDataService {
     private static final ThreadLocal<WebDriver> webDriverThreadLocal = new ThreadLocal<>();
     private SeleniumWorker seleniumWorker;
 
+    private Map<String, Values> data;
+
     @Autowired
     public OandaDataService(SeleniumWorker seleniumWorker) {
         this.seleniumWorker = seleniumWorker;
     }
 
-//    @PostConstruct
-    public void init() throws InterruptedException, IOException {
-        System.out.println(fetchCurrencies().values());
+    public Map<String, Values> getData() {
+        return data;
     }
 
-    public Map<String, Values> fetchCurrencies() throws InterruptedException, IOException {
+    @PostConstruct
+    public void init() throws InterruptedException, IOException {
+        if (data == null) {
+            data = fetchCurrencies();
+        }
+    }
+
+    private Map<String, Values> fetchCurrencies() throws InterruptedException, IOException {
         System.out.println("Loading browser...");
         WebDriver webDriver = seleniumWorker.getDriver();
         webDriverThreadLocal.set(webDriver);
@@ -144,6 +152,26 @@ public class OandaDataService {
         @Override
         public String toString() {
             return ToStringBuilder.reflectionToString(this, ToStringStyle.SIMPLE_STYLE);
+        }
+
+        public String getCurrency() {
+            return currency;
+        }
+
+        public String getCurrencyName() {
+            return currencyName;
+        }
+
+        public String getPrice90Avg() {
+            return price90Avg;
+        }
+
+        public String getPrice180Avg() {
+            return price180Avg;
+        }
+
+        public String getPriceCurrent() {
+            return priceCurrent;
         }
     }
 }
