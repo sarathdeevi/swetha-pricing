@@ -1,1 +1,1 @@
-web: java $JAVA_OPTS -jar app.jar
+web: java -jar build/libs/swetha-pricing-1.0.jar
