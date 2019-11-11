@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,7 +37,6 @@ public class OandaDataService {
         return data;
     }
 
-    @PostConstruct
     public void makeData() throws InterruptedException, IOException {
         if (data == null) {
             data = fetchCurrencies();
