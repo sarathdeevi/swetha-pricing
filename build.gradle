@@ -1,6 +1,6 @@
 buildscript {
   ext {
-    springBootVersion = '2.1.2.RELEASE'
+    springBootVersion = '2.1.6.RELEASE'
   }
   repositories {
     mavenCentral()
@@ -10,7 +10,7 @@ buildscript {
   }
 }
 
-group 'swetha'
+group 'swetha-pricing'
 version '1.0'
 
 apply plugin: 'java'
