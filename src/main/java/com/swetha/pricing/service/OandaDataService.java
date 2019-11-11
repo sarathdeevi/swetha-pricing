@@ -39,7 +39,7 @@ public class OandaDataService {
     }
 
     @PostConstruct
-    public void init() throws InterruptedException, IOException {
+    public void makeData() throws InterruptedException, IOException {
         if (data == null) {
             data = fetchCurrencies();
         }
