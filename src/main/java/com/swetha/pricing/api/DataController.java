@@ -1,6 +1,7 @@
 package com.swetha.pricing.api;
 
 import com.swetha.pricing.service.OandaDataService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,6 +13,7 @@ public class DataController {
 
     private final OandaDataService oandaDataService;
 
+    @Autowired
     public DataController(OandaDataService oandaDataService) {
         this.oandaDataService = oandaDataService;
     }
