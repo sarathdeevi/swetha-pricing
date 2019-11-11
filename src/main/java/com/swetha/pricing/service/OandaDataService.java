@@ -8,6 +8,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,8 @@ import java.util.Map;
 
 @Service
 public class OandaDataService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OandaDataService.class);
 
     private static final ThreadLocal<WebDriver> webDriverThreadLocal = new ThreadLocal<>();
     private SeleniumWorker seleniumWorker;
@@ -42,7 +46,7 @@ public class OandaDataService {
     }
 
     private Map<String, Values> fetchCurrencies() throws InterruptedException, IOException {
-        System.out.println("Loading browser...");
+        LOGGER.info("Loading browser...");
         WebDriver webDriver = seleniumWorker.getDriver();
         webDriverThreadLocal.set(webDriver);
         webDriver.get("https://www1.oanda.com/fx-for-business/historical-rates");
@@ -60,6 +64,7 @@ public class OandaDataService {
         List<WebElement> currencyList = select.findElement(By.cssSelector(".currencyPicker")).findElement(By.cssSelector("ul.list")).findElements(By.tagName("li"));
         Map<String, Values> currencies = new LinkedHashMap<>();
 
+        LOGGER.info("Evaluating currencies...");
         for (WebElement element : currencyList) {
             if (!hasClass(element, "groupLabel")) {
                 Values values = new Values();
@@ -72,6 +77,7 @@ public class OandaDataService {
         select.click();
 
         for (String currency : currencies.keySet()) {
+            LOGGER.info("Getting values for currency : {}", currency);
             Thread.sleep(200);
             select = findElement(By.cssSelector("div.container.have .have-select .select-container"));
             select.click();
@@ -85,7 +91,6 @@ public class OandaDataService {
                 }
             }
 
-            System.out.print(", 90 days");
             findElement(By.cssSelector("div.button.table")).click();
             findElement(By.name("range")).click();
             findElement(By.cssSelector("div.tableCell.ranges")).click();
@@ -96,7 +101,6 @@ public class OandaDataService {
             waitForDisappear(By.id("widget-loader"));
             Thread.sleep(200);
 
-            System.out.print(", 180 days");
             List<WebElement> rows = findElement(By.cssSelector("div#ht2 table tbody")).findElements(By.tagName("tr"));
 
             Values values = currencies.get(currency);
@@ -116,7 +120,7 @@ public class OandaDataService {
             rows = findElement(By.cssSelector("div#ht2 table tbody")).findElements(By.tagName("tr"));
             values.price180Avg = rows.get(0).findElements(By.tagName("td")).get(1).getText();
 
-            System.out.println();
+            LOGGER.info("Values for currency={}, are={}", currency, values);
         }
 
         return currencies;
