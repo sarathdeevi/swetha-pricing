@@ -46,7 +46,7 @@ public class SeleniumWorker {
         } else if (isMac()) {
             path = "chromedriver-mac";
         } else if (isUnix()) {
-            path = "chromedriver-mac";
+            path = "chromedriver-linux";
         } else if (isSolaris()) {
             System.out.println("This is Solaris");
         } else {
