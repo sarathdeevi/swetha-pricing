@@ -4,9 +4,9 @@ import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -15,13 +15,15 @@ import java.io.IOException;
 @Service
 public class SeleniumWorker {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SeleniumWorker.class);
+
     private static String OS = System.getProperty("os.name").toLowerCase();
 
-    private final ResourceLoader resourceLoader;
+    private final AwsFileService awsFileService;
 
     @Autowired
-    public SeleniumWorker(ResourceLoader resourceLoader) {
-        this.resourceLoader = resourceLoader;
+    public SeleniumWorker(AwsFileService awsFileService) {
+        this.awsFileService = awsFileService;
     }
 
     private static boolean isWindows() {
@@ -40,7 +42,7 @@ public class SeleniumWorker {
         return (OS.contains("sunos"));
     }
 
-    public WebDriver getDriver() throws IOException {
+    private String getFileName() {
         String path = "";
         if (isWindows()) {
             path = "chromedriver.exe";
@@ -53,20 +55,39 @@ public class SeleniumWorker {
         } else {
             System.out.println("Your OS is not support!!");
         }
-        System.setProperty("webdriver.chrome.driver", copyAndGetLocation(path));
+        LOGGER.info("Driver class path resource={}", path);
+        return path;
+    }
+
+    public WebDriver getDriver() throws IOException {
+        LOGGER.info("Fetching driver...");
+        if (!isWebDriverAvailable()) {
+            LOGGER.info("Driver is not available, setting up driver...");
+            setUpWebDriver();
+        }
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
         return new ChromeDriver(options);
     }
 
-    private String copyAndGetLocation(String file) throws IOException {
-        Resource resource = resourceLoader.getResource("classpath:" + file);
-        File copy = new File(System.getProperty("user.home"), resource.getFilename());
+    private boolean isWebDriverAvailable() {
+        File copy = new File(System.getProperty("user.home"), getFileName());
+        setDriverPath(copy);
+        return copy.exists();
+    }
 
-        FileUtils.copyInputStreamToFile(resource.getInputStream(), copy);
+    private void setUpWebDriver() throws IOException {
+        File copy = new File(System.getProperty("user.home"), getFileName());
+
+        FileUtils.copyInputStreamToFile(awsFileService.getFileAsStream(getFileName()), copy);
         if (isMac() || isUnix()) {
             Runtime.getRuntime().exec("chmod 777 " + copy.getAbsolutePath());
         }
-        return copy.getAbsolutePath();
+        setDriverPath(copy);
+    }
+
+    private void setDriverPath(File file) {
+        LOGGER.info("Setting driver path={}", file.getAbsolutePath());
+        System.setProperty("webdriver.chrome.driver", file.getAbsolutePath());
     }
 }

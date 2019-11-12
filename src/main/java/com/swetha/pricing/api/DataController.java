@@ -24,6 +24,12 @@ public class DataController {
         return oandaDataService.getData(date).values();
     }
 
+    @GetMapping("/clearData")
+    public String clearData(@RequestParam(value = "date") String date) {
+        oandaDataService.clearData(date);
+        return "DONE";
+    }
+
     @GetMapping("/makeData")
     public String makeData() throws InterruptedException {
         oandaDataService.makeData();

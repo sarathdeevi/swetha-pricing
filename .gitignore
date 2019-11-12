@@ -1,6 +1,6 @@
 .classpath
 .project
-.gradle
+.gradle*
 .idea
 build
 out
@@ -9,3 +9,4 @@ encoded_gs_key*
 *.iml
 *.prefs
 /bin/
+app.jar

@@ -5,6 +5,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -22,6 +24,8 @@ import java.util.Map;
 
 @Service
 public class ExcelFileService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExcelFileService.class);
 
     private final OandaDataService oandaDataService;
 
@@ -52,9 +56,13 @@ public class ExcelFileService {
 
                         if (StringUtils.length(StringUtils.trim(currency)) == 3) {
                             OandaDataService.Values values = todaysValues.get(currency);
-                            cellIterator.next().setCellValue(Float.parseFloat(values.price90Avg));
-                            cellIterator.next().setCellValue(Float.parseFloat(values.price180Avg));
-                            cellIterator.next().setCellValue(Float.parseFloat(values.priceCurrent));
+                            if (values != null) {
+                                cellIterator.next().setCellValue(Float.parseFloat(values.price90Avg));
+                                cellIterator.next().setCellValue(Float.parseFloat(values.price180Avg));
+                                cellIterator.next().setCellValue(Float.parseFloat(values.priceCurrent));
+                            } else {
+                                LOGGER.warn("Values not found for currency={}", currency);
+                            }
                         }
                     } else if ("INR".equalsIgnoreCase(cellIterator.next().getStringCellValue())) {
                         currencies = true;

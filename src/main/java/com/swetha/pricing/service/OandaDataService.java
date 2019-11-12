@@ -16,10 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,13 +34,14 @@ public class OandaDataService {
 
     private static final ThreadLocal<WebDriver> webDriverThreadLocal = new ThreadLocal<>();
     private SeleniumWorker seleniumWorker;
+    private AwsFileService awsFileService;
 
     private Map<String, Map<String, Values>> data;
 
     private SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
 
     @Autowired
-    public OandaDataService(SeleniumWorker seleniumWorker) {
+    public OandaDataService(SeleniumWorker seleniumWorker, AwsFileService awsFileService) {
         this.data = new LinkedHashMap<String, Map<String, Values>>() {
             @Override
             protected boolean removeEldestEntry(final Map.Entry eldest) {
@@ -49,6 +49,12 @@ public class OandaDataService {
             }
         };
         this.seleniumWorker = seleniumWorker;
+        this.awsFileService = awsFileService;
+    }
+
+    public void clearData(String date) {
+        awsFileService.deleteFile(getFile(date));
+        data.remove(date);
     }
 
     public Map<String, Values> getTodaysData() throws IOException {
@@ -59,16 +65,19 @@ public class OandaDataService {
     }
 
     public Map<String, Values> getData(String date) throws IOException {
-        if (!data.containsKey(date)) {
+        Map<String, Values> valuesMap;
+        if (!hasData(date)) {
             Map<String, Values> values = readFromFile(date);
             if (data.size() < 10) {
                 data.put(date, values);
             }
-            return values;
+            valuesMap = values;
+        } else {
+            valuesMap = data.get(date);
         }
 
-        LOGGER.info("Data contains {} entries", data.get(date).values().size());
-        return data.get(date);
+        LOGGER.info("Data contains {} entries", valuesMap.values().size());
+        return valuesMap;
     }
 
     @PostConstruct
@@ -105,28 +114,35 @@ public class OandaDataService {
         return data.containsKey(date) && !data.get(date).isEmpty();
     }
 
-    private void writeToFile(String date) throws IOException {
-        File file = getFile(date);
-        LOGGER.info("Started writing data to file, file={}", file.getAbsolutePath());
-        try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
+    private void writeToFile(String date) {
+        LOGGER.info("Started writing data to file, file={}", getFile(date));
+        StringWriter stringWriter = new StringWriter();
+        try (CSVWriter writer = new CSVWriter(stringWriter)) {
             writer.writeNext(new String[]{"Currency", "Currency Name", "Price 90 day average", "Price 180 day average", "Price today " + date});
             data.get(date).values().forEach(x -> {
                 writer.writeNext(new String[]{x.currency, x.currencyName, x.price90Avg, x.price180Avg, x.priceCurrent});
             });
+
+            awsFileService.uploadFile(stringWriter.toString(), getFile(date));
+            stringWriter.close();
+            LOGGER.info("Finished uploading file, file={}", getFile(date));
         } catch (Exception ex) {
-            LOGGER.error("Writing to file failed, file={}", file.getAbsolutePath(), ex);
+            LOGGER.error("Writing to file failed, file={}", getFile(date), ex);
         }
     }
 
-    private File getFile(String date) {
-        new File(System.getProperty("user.home") + "/prices").mkdirs();
-        return new File(System.getProperty("user.home") + "/prices", "exchange-rates-" + date + ".csv");
+    private boolean fileExists(String date) {
+        return awsFileService.fileExists(getFile(date));
+    }
+
+    private String getFile(String date) {
+        return "exchange-rates-" + date + ".csv";
     }
 
     private Map<String, Values> readFromFile(String date) throws IOException {
         Map<String, Values> dateValues = new HashMap<>();
-        if (getFile(date).exists()) {
-            try (CSVReader reader = new CSVReader(new FileReader(getFile(date)))) {
+        if (fileExists(date)) {
+            try (CSVReader reader = new CSVReader(new StringReader(awsFileService.downloadFile(getFile(date))))) {
                 reader.readNext();
 
                 for (String[] row : reader) {
@@ -231,8 +247,6 @@ public class OandaDataService {
                 LOGGER.info("Values for currency={}, are={}", currency, values);
 
                 data.get(date).put(currency, values);
-
-
             }
         } finally {
             try {
