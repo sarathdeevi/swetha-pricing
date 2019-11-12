@@ -54,12 +54,12 @@ public class OandaDataService {
     }
 
     public Map<String, Values> getData(String date) throws IOException {
-        LOGGER.info("Data : {}", data);
         if (!data.containsKey(date)) {
             initMap(date);
             readFromFile(date);
         }
 
+        LOGGER.info("Data contains {} entries", data.get(date).values().size());
         return data.get(date);
     }
 
@@ -70,7 +70,6 @@ public class OandaDataService {
                 Date date = new Date();
                 String strDate = formatter.format(date);
                 try {
-
                     if (!hasData(strDate)) {
                         LOGGER.info("Data not found for date={}", strDate);
                         initMap(strDate);
@@ -81,8 +80,10 @@ public class OandaDataService {
                         } else {
                             LOGGER.info("Data found in file for date={}", strDate);
                         }
+                    } else {
+                        LOGGER.info("Data already available for date={}", strDate);
                     }
-                    Thread.sleep(TimeUnit.MINUTES.toMillis(10));
+                    Thread.sleep(TimeUnit.MINUTES.toMillis(15));
                 } catch (IOException | InterruptedException ex) {
                     LOGGER.error("Failed to fetch prices for date={}", strDate, ex);
                 }
