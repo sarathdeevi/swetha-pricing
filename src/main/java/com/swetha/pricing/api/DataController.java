@@ -25,7 +25,7 @@ public class DataController {
     }
 
     @GetMapping("/makeData")
-    public String makeData() throws IOException, InterruptedException {
+    public String makeData() throws InterruptedException {
         oandaDataService.makeData();
         return "DONE";
     }
