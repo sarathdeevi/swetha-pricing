@@ -81,7 +81,7 @@ public class OandaDataService {
                             LOGGER.info("Data found in file for date={}", strDate);
                         }
                     } else {
-                        LOGGER.info("Data already available for date={}", strDate);
+                        LOGGER.info("Data already available for date={}, num entries={}", strDate, data.get(strDate).values().size());
                     }
                     Thread.sleep(TimeUnit.MINUTES.toMillis(15));
                 } catch (IOException | InterruptedException ex) {
