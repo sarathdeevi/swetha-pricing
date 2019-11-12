@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Swetha pricing</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        .myButton {
+            box-shadow: inset 0px -3px 7px 0px #29bbff;
+            background: linear-gradient(to bottom, #2dabf9 5%, #0688fa 100%);
+            background-color: #2dabf9;
+            border-radius: 3px;
+            border: 1px solid #0b0e07;
+            display: inline-block;
+            cursor: pointer;
+            color: #ffffff;
+            font-family: Arial;
+            font-size: 15px;
+            padding: 9px 23px;
+            text-decoration: none;
+            text-shadow: 0px 1px 0px #263666;
+        }
+
+        .myButton:hover {
+            background: linear-gradient(to bottom, #0688fa 5%, #2dabf9 100%);
+            background-color: #0688fa;
+        }
+
+        .myButton:active {
+            position: relative;
+            top: 1px;
+        }
+    </style>
+    <script>
+        var $ = jQuery.noConflict();
+
+        $(document).ready(function () {
+            $("#selected-file").change(function () {
+                if (!$('#selected-file').val()) {
+                    alert('Select a file');
+                    return;
+                }
+
+                // Get form
+                var form = $('#fileUploadForm')[0];
+
+                // Create an FormData object
+                var data = new FormData(form);
+
+                // disabled the submit button
+                $("#btnSubmit").prop("disabled", true);
+
+                $.ajax({
+                    type: "POST",
+                    enctype: 'multipart/form-data',
+                    url: "/uploadFile",
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    cache: false,
+                    timeout: 600000,
+                    success: function (data) {
+                        console.log(data);
+                        window.open(data.fileDownloadUri);
+                        $('#btnSubmit').prop("disabled", false);
+                        $('#selected-file').val("");
+                    },
+                    error: function (e) {
+                        alert("Invalid file");
+                        $('#btnSubmit').prop("disabled", false);
+                        $('#selected-file').val("");
+                    }
+                });
+            });
+
+        });
+
+        $(function () {
+            $("#select-date").datepicker().datepicker('setDate', 'today');
+        });
+
+        function makeData() {
+            $.get('/makeData', function (data) {
+                console.log(data);
+            });
+        }
+
+        var table;
+
+        function getData() {
+            var date = $('#select-date').datepicker('getDate');
+            var strDate = date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear();
+            console.log(strDate);
+            $.get('/data?date=' + strDate, function (data) {
+                if (table) {
+                    table.destroy();
+                }
+                $('#table_id').show();
+                var dataTableData = [];
+                data.forEach(function (item, index) {
+                    var line = [];
+                    line.push(item.currency);
+                    line.push(item.currencyName);
+                    line.push(item.price90Avg);
+                    line.push(item.price180Avg);
+                    line.push(item.priceCurrent);
+                    dataTableData.push(line);
+                });
+                console.log(dataTableData);
+
+                table = $('#table_id').DataTable({
+                    "data": dataTableData,
+                    "columns": [
+                        {"title": "Currency"},
+                        {"title": "CurrencyName"},
+                        {"title": "Price 90 day average"},
+                        {"title": "Price 180 day average"},
+                        {"title": "Current Price"}
+                    ]
+                });
+            });
+        }
+    </script>
+</head>
+<body>
+<div style="padding: 10px;">
+    <form method="POST" enctype="multipart/form-data" id="fileUploadForm">
+        <input type="file" name="file" id="selected-file" class="myButton"/>
+    </form>
+    <div style="padding: 10px">
+        <input id="select-date" type="text"/>
+        <button id="get-data" onclick="getData()" class="myButton">Get data</button>
+    </div>
+
+</div>
+<table id="table_id" style="display:none">
+</table>
+</body>
+</html>

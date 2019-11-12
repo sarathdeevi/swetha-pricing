@@ -3,7 +3,7 @@ package com.swetha.pricing.service;
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -41,22 +41,22 @@ public class SeleniumWorker {
     }
 
     public WebDriver getDriver() throws IOException {
-        return new HtmlUnitDriver();
-//
-//        String path = "";
-//        if (isWindows()) {
-//            path = "chromedriver.exe";
-//        } else if (isMac()) {
-//            path = "chromedriver-mac";
-//        } else if (isUnix()) {
-//            path = "chromedriver-linux";
-//        } else if (isSolaris()) {
-//            System.out.println("This is Solaris");
-//        } else {
-//            System.out.println("Your OS is not support!!");
-//        }
-//        System.setProperty("webdriver.chrome.driver", copyAndGetLocation(path));
-//        return new ChromeDriver();
+        String path = "";
+        if (isWindows()) {
+            path = "chromedriver.exe";
+        } else if (isMac()) {
+            path = "chromedriver-mac";
+        } else if (isUnix()) {
+            path = "chromedriver-linux";
+        } else if (isSolaris()) {
+            System.out.println("This is Solaris");
+        } else {
+            System.out.println("Your OS is not support!!");
+        }
+        System.setProperty("webdriver.chrome.driver", copyAndGetLocation(path));
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");
+        return new ChromeDriver(options);
     }
 
     private String copyAndGetLocation(String file) throws IOException {
