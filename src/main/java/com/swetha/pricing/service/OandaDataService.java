@@ -42,7 +42,12 @@ public class OandaDataService {
 
     @Autowired
     public OandaDataService(SeleniumWorker seleniumWorker) {
-        this.data = new HashMap<>();
+        this.data = new LinkedHashMap<String, Map<String, Values>>() {
+            @Override
+            protected boolean removeEldestEntry(final Map.Entry eldest) {
+                return size() > 10;
+            }
+        };
         this.seleniumWorker = seleniumWorker;
     }
 
@@ -55,8 +60,11 @@ public class OandaDataService {
 
     public Map<String, Values> getData(String date) throws IOException {
         if (!data.containsKey(date)) {
-            initMap(date);
-            readFromFile(date);
+            Map<String, Values> values = readFromFile(date);
+            if (data.size() < 10) {
+                data.put(date, values);
+            }
+            return values;
         }
 
         LOGGER.info("Data contains {} entries", data.get(date).values().size());
@@ -73,7 +81,7 @@ public class OandaDataService {
                     if (!hasData(strDate)) {
                         LOGGER.info("Data not found for date={}", strDate);
                         initMap(strDate);
-                        if (!readFromFile(strDate)) {
+                        if (readFromFile(strDate).isEmpty()) {
                             LOGGER.info("Data not available on disk for date={}, will fetch from site", strDate);
                             fetchCurrencies(strDate);
                             writeToFile(strDate);
@@ -111,7 +119,8 @@ public class OandaDataService {
         return new File(System.getProperty("user.home") + "/prices", "exchange-rates-" + date + ".csv");
     }
 
-    private boolean readFromFile(String date) throws IOException {
+    private Map<String, Values> readFromFile(String date) throws IOException {
+        Map<String, Values> dateValues = new HashMap<>();
         if (getFile(date).exists()) {
             try (CSVReader reader = new CSVReader(new FileReader(getFile(date)))) {
                 reader.readNext();
@@ -123,11 +132,11 @@ public class OandaDataService {
                     values.price90Avg = row[2];
                     values.price180Avg = row[3];
                     values.priceCurrent = row[4];
-                    data.get(date).put(values.currency, values);
+                    dateValues.put(values.currency, values);
                 }
             }
         }
-        return getFile(date).exists();
+        return dateValues;
     }
 
     private void initMap(String date) {
