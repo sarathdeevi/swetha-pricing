@@ -148,81 +148,95 @@ public class OandaDataService {
     private void fetchCurrencies(String date) throws InterruptedException, IOException {
         LOGGER.info("Loading browser...");
         WebDriver webDriver = seleniumWorker.getDriver();
-        webDriverThreadLocal.set(webDriver);
-        webDriver.get("https://www1.oanda.com/fx-for-business/historical-rates");
+        try {
+            webDriverThreadLocal.set(webDriver);
 
-        WebElement select = findElement(By.cssSelector("div.container.want .currency-container .want-select .select-container"));
-        select.click();
-        select.findElement(By.cssSelector(".currencyPicker .search")).sendKeys("INR");
-        Thread.sleep(200);
-        select.findElement(By.cssSelector(".currencyPicker .search")).sendKeys(Keys.DOWN);
-        select.findElement(By.cssSelector(".currencyPicker .search")).sendKeys(Keys.ENTER);
 
-        select = findElement(By.cssSelector("div.container.have .have-select .select-container"));
-        select.click();
-        Thread.sleep(200);
-        List<WebElement> currencyList = select.findElement(By.cssSelector(".currencyPicker")).findElement(By.cssSelector("ul.list")).findElements(By.tagName("li"));
-        Map<String, Values> currencies = new LinkedHashMap<>();
+            webDriver.get("https://www1.oanda.com/fx-for-business/historical-rates");
 
-        LOGGER.info("Evaluating currencies...");
-        for (WebElement element : currencyList) {
-            if (!hasClass(element, "groupLabel")) {
-                Values values = new Values();
-                values.currency = element.findElement(By.className("value")).getText();
-                values.currencyName = element.findElement(By.className("display")).getText();
 
-                currencies.put(values.currency, values);
-            }
-        }
-        select.click();
-
-        for (String currency : currencies.keySet()) {
-            LOGGER.info("Getting values for currency : {}", currency);
+            WebElement select = findElement(By.cssSelector("div.container.want .currency-container .want-select .select-container"));
+            select.click();
+            select.findElement(By.cssSelector(".currencyPicker .search")).sendKeys("INR");
             Thread.sleep(200);
+            select.findElement(By.cssSelector(".currencyPicker .search")).sendKeys(Keys.DOWN);
+            select.findElement(By.cssSelector(".currencyPicker .search")).sendKeys(Keys.ENTER);
+
             select = findElement(By.cssSelector("div.container.have .have-select .select-container"));
             select.click();
-            select.findElement(By.cssSelector(".currencyPicker .search")).sendKeys(currency);
             Thread.sleep(200);
-            List<WebElement> currList = select.findElement(By.cssSelector(".currencyPicker")).findElement(By.cssSelector("ul.list")).findElements(By.tagName("li"));
-            for (WebElement element : currList) {
-                if (element.findElement(By.className("value")).getText().equalsIgnoreCase(currency)) {
-                    element.click();
-                    break;
+            List<WebElement> currencyList = select.findElement(By.cssSelector(".currencyPicker")).findElement(By.cssSelector("ul.list")).findElements(By.tagName("li"));
+            Map<String, Values> currencies = new LinkedHashMap<>();
+
+            LOGGER.info("Evaluating currencies...");
+            for (WebElement element : currencyList) {
+                if (!hasClass(element, "groupLabel")) {
+                    Values values = new Values();
+                    values.currency = element.findElement(By.className("value")).getText();
+                    values.currencyName = element.findElement(By.className("display")).getText();
+
+                    currencies.put(values.currency, values);
                 }
             }
+            select.click();
 
-            findElement(By.cssSelector("div.button.table")).click();
-            findElement(By.name("range")).click();
-            findElement(By.cssSelector("div.tableCell.ranges")).click();
-            findElement(By.cssSelector("div.ranges .dropdown .table.item[data-days='90']")).click();
-            findElement(By.cssSelector("button.apply")).click();
+            for (String currency : currencies.keySet()) {
+                LOGGER.info("Getting values for currency : {}", currency);
+                Thread.sleep(200);
+                select = findElement(By.cssSelector("div.container.have .have-select .select-container"));
+                select.click();
+                select.findElement(By.cssSelector(".currencyPicker .search")).sendKeys(currency);
+                Thread.sleep(200);
+                List<WebElement> currList = select.findElement(By.cssSelector(".currencyPicker")).findElement(By.cssSelector("ul.list")).findElements(By.tagName("li"));
+                for (WebElement element : currList) {
+                    if (element.findElement(By.className("value")).getText().equalsIgnoreCase(currency)) {
+                        element.click();
+                        break;
+                    }
+                }
 
-            Thread.sleep(400);
-            waitForDisappear(By.id("widget-loader"));
-            Thread.sleep(200);
+                findElement(By.cssSelector("div.button.table")).click();
+                findElement(By.name("range")).click();
+                findElement(By.cssSelector("div.tableCell.ranges")).click();
+                findElement(By.cssSelector("div.ranges .dropdown .table.item[data-days='90']")).click();
+                findElement(By.cssSelector("button.apply")).click();
 
-            List<WebElement> rows = findElement(By.cssSelector("div#ht2 table tbody")).findElements(By.tagName("tr"));
+                Thread.sleep(400);
+                waitForDisappear(By.id("widget-loader"));
+                Thread.sleep(200);
 
-            Values values = currencies.get(currency);
+                List<WebElement> rows = findElement(By.cssSelector("div#ht2 table tbody")).findElements(By.tagName("tr"));
 
-            values.price90Avg = rows.get(0).findElements(By.tagName("td")).get(1).getText();
-            values.priceCurrent = rows.get(3).findElements(By.tagName("td")).get(1).getText();
+                Values values = currencies.get(currency);
 
-            findElement(By.name("range")).click();
-            findElement(By.cssSelector("div.tableCell.ranges")).click();
-            findElement(By.cssSelector("div.ranges .dropdown .table.item[data-days='180']")).click();
-            findElement(By.cssSelector("button.apply")).click();
+                values.price90Avg = rows.get(0).findElements(By.tagName("td")).get(1).getText();
+                values.priceCurrent = rows.get(3).findElements(By.tagName("td")).get(1).getText();
 
-            Thread.sleep(400);
-            waitForDisappear(By.id("widget-loader"));
-            Thread.sleep(200);
+                findElement(By.name("range")).click();
+                findElement(By.cssSelector("div.tableCell.ranges")).click();
+                findElement(By.cssSelector("div.ranges .dropdown .table.item[data-days='180']")).click();
+                findElement(By.cssSelector("button.apply")).click();
 
-            rows = findElement(By.cssSelector("div#ht2 table tbody")).findElements(By.tagName("tr"));
-            values.price180Avg = rows.get(0).findElements(By.tagName("td")).get(1).getText();
+                Thread.sleep(400);
+                waitForDisappear(By.id("widget-loader"));
+                Thread.sleep(200);
 
-            LOGGER.info("Values for currency={}, are={}", currency, values);
+                rows = findElement(By.cssSelector("div#ht2 table tbody")).findElements(By.tagName("tr"));
+                values.price180Avg = rows.get(0).findElements(By.tagName("td")).get(1).getText();
 
-            data.get(date).put(currency, values);
+                LOGGER.info("Values for currency={}, are={}", currency, values);
+
+                data.get(date).put(currency, values);
+
+
+            }
+        } finally {
+            try {
+                webDriver.close();
+                webDriver.quit();
+            } catch (Exception ex) {
+                LOGGER.error(ex.getMessage());
+            }
         }
     }
 
