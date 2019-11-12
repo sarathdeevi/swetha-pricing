@@ -67,11 +67,11 @@ public class OandaDataService {
     public void makeData() {
         Thread thread = new Thread(() -> {
             while (true) {
+                Date date = new Date();
+                String strDate = formatter.format(date);
                 try {
-                    Date date = new Date();
-                    String strDate = formatter.format(date);
 
-                    if (!data.containsKey(strDate)) {
+                    if (!hasData(strDate)) {
                         LOGGER.info("Data not found for date={}", strDate);
                         initMap(strDate);
                         if (!readFromFile(strDate)) {
@@ -84,12 +84,16 @@ public class OandaDataService {
                     }
                     Thread.sleep(TimeUnit.MINUTES.toMillis(10));
                 } catch (IOException | InterruptedException ex) {
-                    ex.printStackTrace();
+                    LOGGER.error("Failed to fetch prices for date={}", strDate, ex);
                 }
             }
         });
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private boolean hasData(String date) {
+        return data.containsKey(date) && !data.get(date).isEmpty();
     }
 
     private void writeToFile(String date) throws IOException {
