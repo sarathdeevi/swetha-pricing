@@ -106,11 +106,15 @@ public class OandaDataService {
     }
 
     private void writeToFile(String date) throws IOException {
-        try (CSVWriter writer = new CSVWriter(new FileWriter(getFile(date)))) {
+        File file = getFile(date);
+        LOGGER.info("Started writing data to file, file={}", file.getAbsolutePath());
+        try (CSVWriter writer = new CSVWriter(new FileWriter(file))) {
             writer.writeNext(new String[]{"Currency", "Currency Name", "Price 90 day average", "Price 180 day average", "Price today " + date});
             data.get(date).values().forEach(x -> {
                 writer.writeNext(new String[]{x.currency, x.currencyName, x.price90Avg, x.price180Avg, x.priceCurrent});
             });
+        } catch (Exception ex) {
+            LOGGER.error("Writing to file failed, file={}", file.getAbsolutePath(), ex);
         }
     }
 
